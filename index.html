@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Akış Budget">
+<meta name="theme-color" content="#0a0a0f">
+<title>Akış Budget</title>
+<link rel="manifest" href="manifest.json">
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#0a0a0f;color:#e8e8f0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none;}
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;position:relative;}
+/* Header */
+.hdr{background:#111118;border-bottom:1px solid rgba(255,255,255,0.07);padding:env(safe-area-inset-top,0) 0 0;flex-shrink:0;}
+.hdr-inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 8px;}
+.logo{font-size:18px;font-weight:700;color:#e8e8f0;}
+.month-nav{display:flex;align-items:center;gap:4px;}
+.mnbtn{background:#18181f;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#e8e8f0;width:38px;height:38px;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mnbtn:disabled{color:#5a5a72;opacity:.4;}
+.mnlabel{font-size:15px;color:#9090a8;font-weight:500;min-width:80px;text-align:center;}
+/* Sum cards */
+.sum-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 12px 12px;}
+.sc{background:#18181f;border-radius:9px;padding:9px 8px;border:1px solid rgba(255,255,255,0.05);}
+.sc-l{font-size:11px;color:#5a5a72;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.sc-v{font-size:15px;font-weight:700;}
+/* Tabs */
+.tabs{display:flex;background:#111118;border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
+.tab{flex:1;padding:16px 0 12px;text-align:center;font-size:14px;color:#5a5a72;cursor:pointer;border-top:2px solid transparent;transition:all .15s;background:none;border-left:none;border-right:none;border-bottom:none;}
+.tab.on{color:#818cf8;border-top-color:#818cf8;font-weight:600;}
+/* Content */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#0a0a0f;}
+.page{display:none;padding:12px;}
+.page.on{display:block;}
+/* Sections */
+.sec{font-size:12px;color:#5a5a72;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px;font-weight:600;}
+.sec:first-child{margin-top:0;}
+/* Transactions */
+.tx{display:flex;align-items:center;gap:12px;padding:14px 14px;background:#111118;border-radius:10px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.05);}
+.tx-ico{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tx-info{flex:1;min-width:0;}
+.tx-top{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.tx-name{font-size:16px;font-weight:500;color:#e8e8f0;}
+.kpill{font-size:12px;padding:2px 5px;border-radius:5px;font-weight:600;background:rgba(245,158,11,.15);color:#f59e0b;}
+.npill{font-size:12px;padding:2px 5px;border-radius:5px;background:rgba(255,255,255,.05);color:#5a5a72;}
+.tx-sub{font-size:13px;color:#5a5a72;margin-top:1px;}
+.tx-amt{font-size:16px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+/* Form */
+.seg{display:flex;background:#18181f;border-radius:8px;padding:3px;margin-bottom:13px;}
+.sbtn{flex:1;padding:12px;border:none;border-radius:6px;background:transparent;font-size:15px;font-weight:600;cursor:pointer;color:#5a5a72;transition:all .15s;}
+.sbtn.g.on{background:#22d3a0;color:#000;}
+.sbtn.d.on{background:#f25a5a;color:#fff;}
+.fl2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;}
+.fl1{margin-bottom:9px;}
+.flabel{font-size:12px;color:#5a5a72;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;display:block;}
+.finput{width:100%;background:#18181f;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 14px;font-size:17px;color:#e8e8f0;outline:none;-webkit-appearance:none;}
+.finput:focus{border-color:#6366f1;}
+select.finput{cursor:pointer;}
+/* Kategori chips */
+.kat-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.kat-scroll::-webkit-scrollbar{display:none;}
+.kchip{display:flex;align-items:center;gap:6px;padding:12px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:#18181f;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.kchip.on{border-color:#6366f1;background:rgba(99,102,241,0.15);}
+.kchip-e{font-size:16px;}
+.kchip-l{font-size:14px;color:#9090a8;}
+.kchip.on .kchip-l{color:#818cf8;font-weight:600;}
+/* Ödeme chips */
+.odeme-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.ochip{padding:12px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:#18181f;cursor:pointer;font-size:14px;color:#9090a8;}
+.ochip.on{border-color:#f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;font-weight:600;}
+/* Taksit */
+.chk-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer;margin-bottom:8px;}
+.chk-sq{width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.chk-sq.on{background:#a78bfa;border-color:#a78bfa;}
+.chk-tick{font-size:14px;color:#fff;font-weight:700;display:none;}
+.chk-sq.on .chk-tick{display:block;}
+.chk-lbl{font-size:16px;color:#9090a8;}
+.chk-lbl.on{color:#a78bfa;font-weight:600;}
+.tak-box{background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px;margin-bottom:10px;}
+.tak-preview{font-size:15px;color:#a78bfa;font-weight:600;}
+/* Ekle butonu */
+.add-btn{width:100%;padding:18px;border:none;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;margin-top:2px;transition:opacity .15s;}
+.add-btn:active{opacity:.8;}
+/* Özet */
+.oz-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.oz-card{background:#111118;border-radius:11px;padding:13px;border:1px solid rgba(255,255,255,.05);}
+.oz-lbl{font-size:12px;color:#5a5a72;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.oz-val{font-size:19px;font-weight:700;}
+.oz-sub{font-size:13px;color:#5a5a72;margin-top:3px;}
+/* Bars */
+.cat-row{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.cat-e{font-size:16px;width:18px;text-align:center;flex-shrink:0;}
+.cat-n{font-size:14px;color:#9090a8;width:62px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;height:6px;background:#18181f;border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;}
+.cat-amt{font-size:14px;color:#e8e8f0;font-weight:600;width:54px;text-align:right;flex-shrink:0;}
+/* Pay rows */
+.pay-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.pay-row:last-child{border-bottom:none;}
+.pay-name{font-size:16px;font-weight:500;color:#e8e8f0;}
+.pay-sub{font-size:13px;color:#5a5a72;margin-top:2px;}
+.pay-amt{font-size:16px;font-weight:700;}
+/* Prog */
+.prog-row{display:flex;align-items:center;gap:7px;margin-top:5px;}
+.prog-pct{font-size:13px;color:#5a5a72;width:28px;text-align:right;}
+/* Card */
+.card{background:#111118;border-radius:11px;padding:13px;margin-bottom:12px;border:1px solid rgba(255,255,255,.05);}
+.card-title{font-size:12px;color:#5a5a72;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:600;}
+/* Filter */
+.filtr-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.fbtn{padding:10px 16px;border-radius:7px;border:1px solid rgba(255,255,255,.07);background:transparent;font-size:14px;color:#9090a8;cursor:pointer;}
+.fbtn.on{border-color:#6366f1;background:rgba(99,102,241,.12);color:#818cf8;font-weight:600;}
+.fcount{margin-left:auto;font-size:13px;color:#5a5a72;}
+/* Empty */
+.empty{text-align:center;padding:50px 0;color:#5a5a72;}
+.empty-ico{font-size:41px;margin-bottom:8px;}
+.empty-txt{font-size:16px;}
+/* Toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:#534AB7;color:#fff;padding:8px 16px;border-radius:16px;font-size:15px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{bottom:80px;opacity:1;transform:translateX(-50%) translateY(0);}
+/* Notification Prompt Modal */
+#notif-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;}
+#notif-modal.show{display:flex;}
+.nm-card{background:#111118;width:100%;max-width:350px;border-radius:20px;padding:24px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 40px rgba(0,0,0,0.5);}
+.nm-icon{font-size:32px;margin-bottom:16px;text-align:center;}
+.nm-title{font-size:18px;font-weight:700;margin-bottom:8px;text-align:center;color:#fff;}
+.nm-text{font-size:15px;color:#9090a8;margin-bottom:20px;text-align:center;line-height:1.4;}
+.nm-info{background:#18181f;border-radius:12px;padding:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.05);}
+.nm-row{display:flex;justify-content:space-between;margin-bottom:8px;}
+.nm-lbl{font-size:12px;color:#5a5a72;text-transform:uppercase;}
+.nm-val{font-size:15px;font-weight:600;color:#e8e8f0;}
+.nm-btns{display:flex;gap:10px;}
+.nm-btn{flex:1;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
+.nm-add{background:#6366f1;color:#fff;}
+.nm-ign{background:#18181f;color:#5a5a72;}
+/* Ayarlar */
+.a-card{background:#111118;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid rgba(255,255,255,.05);}
+.a-title{font-size:16px;font-weight:700;color:#e8e8f0;margin-bottom:6px;}
+.a-hint{font-size:14px;color:#5a5a72;line-height:1.6;margin-bottom:10px;}
+.a-btn{width:100%;padding:16px;border:none;border-radius:9px;font-size:16px;font-weight:600;cursor:pointer;color:#e8e8f0;}
+.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.stat-row:last-child{border-bottom:none;}
+.stat-lbl{font-size:15px;color:#9090a8;}
+.stat-val{font-size:15px;font-weight:600;color:#e8e8f0;}
+.kart-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.kart-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-inner">
+      <div class="logo">💸 Akis Budget</div>
+      <div class="month-nav">
+        <button class="mnbtn" id="mn-prev" onclick="prevMonth()">‹</button>
+        <div class="mnlabel" id="mn-label"></div>
+        <button class="mnbtn" id="mn-next" onclick="nextMonth()">›</button>
+      </div>
+    </div>
+    <div class="sum-row">
+      <div class="sc"><div class="sc-l">GELİR</div><div class="sc-v" id="hg" style="color:#22d3a0"></div></div>
+      <div class="sc"><div class="sc-l">GİDER</div><div class="sc-v" id="hd" style="color:#f25a5a"></div></div>
+      <div class="sc"><div class="sc-l">BAKİYE</div><div class="sc-v" id="hb"></div></div>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <!-- İŞLEMLER -->
+    <div class="page on" id="pg-islemler">
+      <div class="filtr-row">
+        <button class="fbtn on" onclick="setFiltr('hepsi',this)">Tümü</button>
+        <button class="fbtn" onclick="setFiltr('gelir',this)">↑ Gelir</button>
+        <button class="fbtn" onclick="setFiltr('gider',this)">↓ Gider</button>
+        <span class="fcount" id="fcount"></span>
+      </div>
+      <div id="tx-list"></div>
+    </div>
+
+    <!-- EKLE -->
+    <div class="page" id="pg-ekle">
+      <div class="seg">
+        <button class="sbtn g on" id="btn-g" onclick="setTip('gelir')">↑ Gelir</button>
+        <button class="sbtn d" id="btn-d" onclick="setTip('gider')">↓ Gider</button>
+      </div>
+      <div class="fl2">
+        <div><label class="flabel">MİKTAR (₺)</label><input class="finput" type="number" id="f-miktar" placeholder="0" inputmode="decimal" oninput="updateTakPreview()"></div>
+        <div><label class="flabel">TARİH</label><input class="finput" type="date" id="f-tarih"></div>
+      </div>
+      <div class="fl1">
+        <label class="flabel">KATEGORİ</label>
+        <div class="kat-scroll" id="f-kat-list"></div>
+      </div>
+      <div class="fl1">
+        <label class="flabel">ÖDEME YÖNTEMİ</label>
+        <div class="odeme-row" id="f-odeme-list"></div>
+      </div>
+      <div class="fl1"><label class="flabel">AÇIKLAMA</label><input class="finput" id="f-acik" placeholder="İsteğe bağlı…"></div>
+      <div id="tak-toggle-wrap">
+        <div class="chk-row" onclick="toggleTak()">
+          <div class="chk-sq" id="chk-sq"><span class="chk-tick">✓</span></div>
+          <span class="chk-lbl" id="chk-lbl">🔄 Taksitli alışveriş</span>
+        </div>
+        <div class="tak-box" id="tak-box" style="display:none;">
+          <div class="fl2" style="margin-bottom:0;">
+            <div><label class="flabel">TAKSİT SAYISI</label><input class="finput" type="number" id="f-taksay" value="12" min="2" max="60" oninput="updateTakPreview()"></div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:10px;"><span class="tak-preview" id="tak-preview">12 × ₺0/ay</span></div>
+          </div>
+        </div>
+      </div>
+      <button class="add-btn" id="add-btn" onclick="ekle()">+ Ekle</button>
+    </div>
+
+    <!-- ÖZET -->
+    <div class="page" id="pg-ozet">
+      <div class="oz-grid" id="oz-grid"></div>
+      <div class="card" id="oz-cats-card" style="display:none;">
+        <div class="card-title">GİDER DAĞILIMI</div>
+        <div id="oz-cats"></div>
+      </div>
+      <div class="card" id="oz-sabit-card" style="display:none;">
+        <div class="card-title">SABİT HARCAMALAR</div>
+        <div id="oz-sabit"></div>
+      </div>
+      <div class="card" id="oz-tak-card" style="display:none;">
+        <div class="card-title">AKTİF TAKSİTLER</div>
+        <div id="oz-tak"></div>
+      </div>
+      <div class="card" id="oz-krd-card" style="display:none;">
+        <div class="card-title">AKTİF KREDİLER</div>
+        <div id="oz-krd"></div>
+      </div>
+    </div>
+
+    <!-- AYARLAR -->
+    <div class="page" id="pg-ayarlar">
+      <div class="a-card">
+        <div class="a-title">☁️ Bulut (Gist)</div>
+        <div class="a-hint">Veriler her açılışta otomatik olarak GitHub Gist üzerinden güncellenir.</div>
+        <button class="a-btn" onclick="syncBulut()" style="background:#6366f1;">🔄 Şimdi Güncelle</button>
+      </div>
+      <div class="a-card">
+        <div class="a-title">💾 Veriyi Dışa Aktar</div>
+        <div class="a-hint">Mevcut veriyi JSON dosyası olarak indir.</div>
+        <button class="a-btn" onclick="exportData()" style="background:#18181f;border:1px solid rgba(255,255,255,.1);">📤 JSON İndir</button>
+      </div>
+      <div class="a-card" id="veri-ozet">
+        <div class="a-title">📊 Yüklü Veri</div>
+        <div id="veri-stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="goTab('islemler',this)">📋<br>İşlemler</button>
+    <button class="tab" onclick="goTab('ekle',this)">➕<br>Ekle</button>
+    <button class="tab" onclick="goTab('ozet',this)">📊<br>Özet</button>
+    <button class="tab" onclick="goTab('ayarlar',this)">⚙️<br>Ayarlar</button>
+  </div>
+</div>
+  <div id="toast" class="toast"></div>
+
+  <!-- Notification Prompt Modal -->
+  <div id="notif-modal">
+    <div class="nm-card">
+      <div class="nm-icon">🔔</div>
+      <div class="nm-title">Harcama Algılandı</div>
+      <div class="nm-text" id="nm-desc">BonusFlaş üzerinden yeni bir harcama bildirimi geldi.</div>
+      <div class="nm-info">
+        <div class="nm-row"><span class="nm-lbl">İşyeri</span><span class="nm-val" id="nm-merchant">-</span></div>
+        <div class="nm-row"><span class="nm-lbl">Tutar</span><span class="nm-val" id="nm-amount">0,00 TL</span></div>
+      </div>
+      <div class="nm-btns">
+        <button class="nm-btn nm-ign" onclick="closeNotifModal()">Yoksay</button>
+        <button class="nm-btn nm-add" onclick="addNotifTransaction()">Ekle</button>
+    </div>
+  </div>
+</div>
+<!-- Permission Banner -->
+<div id="perm-banner" style="display:none;background:#f59e0b;color:#000;padding:12px 16px;font-size:14px;font-weight:600;align-items:center;gap:12px;cursor:pointer;" onclick="openNotificationSettings()">
+  <span style="font-size:20px;">🔔</span>
+  <div style="flex:1;">Harcamaları yakalamak için bıldirim izni gereklidir. Dokun ve ayarla.</div>
+  <span style="font-size:18px;">›</span>
+</div>
+</div>
+<script>
+const INIT_DATA = {"islemler":[{"id":1773814766807.643,"tip":"gider","miktar":500,"tarih":"2026-03-17","kategori":"market","aciklama":"MANTI","odemeYontemi":"1772815370595.1975"},{"id":1773750082925.1926,"tip":"gider","miktar":249,"tarih":"2026-03-16","kategori":"giyim","aciklama":"DEFACTO","odemeYontemi":"1772810290769.6548"},{"id":1773572338105.8076,"tip":"gider","miktar":4369.53,"tarih":"2026-03-15","kategori":"market","aciklama":"MİGROS","odemeYontemi":"1772815370595.1975"},{"id":1773558021027.203,"tip":"gider","miktar":90,"tarih":"2026-03-15","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1773499894769.676,"tip":"gider","miktar":802.15,"tarih":"2026-03-14","kategori":"market","aciklama":"BİZİM","odemeYontemi":"1772810290769.6548"},{"id":1773485667571.2742,"tip":"gelir","miktar":150000,"tarih":"2026-04-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773485655437.7527,"tip":"gelir","miktar":150000,"tarih":"2026-03-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773483413876.2703,"tip":"gider","miktar":631.89,"tarih":"2026-03-14","kategori":"eglence","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1773483401004.4072,"tip":"gider","miktar":245,"tarih":"2026-03-14","kategori":"yemek","aciklama":"KAHVALTI","odemeYontemi":"1772810290769.6548"},{"id":1773383707219.6006,"tip":"gider","miktar":240,"tarih":"2026-03-12","kategori":"market","aciklama":"SU","odemeYontemi":"1772810290769.6548"},{"id":1773252298829.864,"tip":"gider","miktar":832,"tarih":"2026-03-11","kategori":"ev","aciklama":"BOSCH","odemeYontemi":"1772810290769.6548"},{"id":1773123052242.7454,"tip":"gider","miktar":60,"tarih":"2026-03-09","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1773063598411.3853,"tip":"gelir","miktar":150000,"tarih":"2026-12-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063592544.2517,"tip":"gelir","miktar":150000,"tarih":"2026-11-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063587837.2488,"tip":"gelir","miktar":150000,"tarih":"2026-10-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063582267.1877,"tip":"gelir","miktar":150000,"tarih":"2026-09-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063566303.032,"tip":"gelir","miktar":150000,"tarih":"2026-06-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063561440.9973,"tip":"gelir","miktar":150000,"tarih":"2026-05-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063543463.9023,"tip":"gelir","miktar":150000,"tarih":"2026-02-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063534136.6025,"tip":"gelir","miktar":102500,"tarih":"2026-01-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773063359008.0203,"tip":"gider","miktar":297,"tarih":"2026-03-09","kategori":"saglik","aciklama":"İLAÇ","odemeYontemi":"1772810290769.6548"},{"id":1773043212333.9434,"tip":"gelir","miktar":150000,"tarih":"2026-08-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773043205364.879,"tip":"gelir","miktar":150000,"tarih":"2026-07-01","kategori":"maas","aciklama":"","odemeYontemi":"nakit"},{"id":1773000234926.6843,"tip":"gider","miktar":687.5,"tarih":"2026-03-16","kategori":"fatura","aciklama":"TTNET","odemeYontemi":"1772810290769.6548"},{"id":1772985985699.0034,"tip":"gider","miktar":799.93,"tarih":"2026-03-08","kategori":"market","aciklama":"MİGROS","odemeYontemi":"1772810290769.6548"},{"id":1772970064794.9604,"tip":"gider","miktar":200,"tarih":"2026-03-08","kategori":"araba","aciklama":"YIKAMA","odemeYontemi":"1772810290769.6548"},{"id":1772920621999.4407,"tip":"gider","miktar":2200,"tarih":"2026-03-08","kategori":"eglence","aciklama":"AKÜ","odemeYontemi":"1772810290769.6548"},{"id":1772918732705.686,"tip":"gider","miktar":21000,"tarih":"2026-02-28","kategori":"tatil","aciklama":"UÇAK","odemeYontemi":"nakit"},{"id":1772918108424.77,"tip":"gider","miktar":163.75,"tarih":"2026-03-06","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772917935762.994,"tip":"gider","miktar":996.73,"tarih":"2026-01-23","kategori":"eglence","aciklama":"PS","odemeYontemi":"nakit"},{"id":1772917913128.7317,"tip":"gider","miktar":1355,"tarih":"2026-01-25","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917897009.2563,"tip":"gider","miktar":7344.14,"tarih":"2026-01-25","kategori":"market","aciklama":"METRO","odemeYontemi":"1772810290769.6548"},{"id":1772917861321.8896,"tip":"gider","miktar":865.14,"tarih":"2026-01-28","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772917834544.7585,"tip":"gider","miktar":57.4,"tarih":"2026-01-29","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772917595493.5505,"tip":"gider","miktar":2000,"tarih":"2026-01-30","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917578043.7827,"tip":"gider","miktar":304,"tarih":"2026-01-31","kategori":"eglence","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917554820.5803,"tip":"gider","miktar":395.1,"tarih":"2026-02-01","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772917525660.7573,"tip":"gider","miktar":162.5,"tarih":"2026-02-02","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772917515886.4697,"tip":"gider","miktar":480,"tarih":"2026-02-02","kategori":"market","aciklama":"SU","odemeYontemi":"1772810290769.6548"},{"id":1772917495033.1646,"tip":"gider","miktar":279.81,"tarih":"2026-02-05","kategori":"ev","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917481425.015,"tip":"gider","miktar":290.8,"tarih":"2026-02-05","kategori":"ev","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917458117.065,"tip":"gider","miktar":49.9,"tarih":"2026-02-05","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772917444411.7925,"tip":"gider","miktar":586,"tarih":"2026-02-05","kategori":"saglik","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917426119.8325,"tip":"gider","miktar":400,"tarih":"2026-02-07","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917367211.3533,"tip":"gider","miktar":168.38,"tarih":"2026-02-08","kategori":"giyim","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917342146.6353,"tip":"gider","miktar":720,"tarih":"2026-02-08","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917331758.7427,"tip":"gider","miktar":400,"tarih":"2026-02-09","kategori":"eglence","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917268183.667,"tip":"gider","miktar":3195.07,"tarih":"2026-02-09","kategori":"market","aciklama":"METRO","odemeYontemi":"1772810290769.6548"},{"id":1772917249447.0603,"tip":"gider","miktar":262.4,"tarih":"2026-02-10","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917167449.6008,"tip":"gider","miktar":640,"tarih":"2026-02-10","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917157111.0432,"tip":"gider","miktar":1525,"tarih":"2026-02-10","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917147399.671,"tip":"gider","miktar":1800,"tarih":"2026-02-10","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917135620.2625,"tip":"gider","miktar":2164.3,"tarih":"2026-02-10","kategori":"giyim","aciklama":"ÖZDİLEK","odemeYontemi":"1772810290769.6548"},{"id":1772917117624.8105,"tip":"gider","miktar":180,"tarih":"2026-02-11","kategori":"eglence","aciklama":"DR","odemeYontemi":"1772810290769.6548"},{"id":1772917071511.9807,"tip":"gider","miktar":300,"tarih":"2026-02-11","kategori":"yemek","aciklama":"IKEA","odemeYontemi":"1772810290769.6548"},{"id":1772917058868.3289,"tip":"gider","miktar":951.98,"tarih":"2026-02-11","kategori":"ev","aciklama":"IKEA","odemeYontemi":"1772810290769.6548"},{"id":1772917039626.5906,"tip":"gider","miktar":1606.5,"tarih":"2026-02-11","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772917014159.2014,"tip":"gider","miktar":2150,"tarih":"2026-02-11","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772916983199.2815,"tip":"gider","miktar":641.89,"tarih":"2026-02-12","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772916972908.3972,"tip":"gider","miktar":1795.22,"tarih":"2026-02-12","kategori":"giyim","aciklama":"ÖZDİLEK","odemeYontemi":"1772810290769.6548"},{"id":1772916956019.987,"tip":"gider","miktar":9359.83,"tarih":"2026-02-12","kategori":"market","aciklama":"METRO","odemeYontemi":"1772810290769.6548"},{"id":1772916940011.4482,"tip":"gider","miktar":400,"tarih":"2026-02-13","kategori":"eglence","aciklama":"PS","odemeYontemi":"1772810290769.6548"},{"id":1772916926847.213,"tip":"gider","miktar":103.99,"tarih":"2026-02-15","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772916913648.5522,"tip":"gider","miktar":2000,"tarih":"2026-02-16","kategori":"araba","aciklama":"YAKIT","odemeYontemi":"1772810290769.6548"},{"id":1772916898823.0574,"tip":"gider","miktar":371.77,"tarih":"2026-02-17","kategori":"saglik","aciklama":"İLAÇ","odemeYontemi":"1772810290769.6548"},{"id":1772916864444.4985,"tip":"gider","miktar":448.87,"tarih":"2026-02-21","kategori":"market","aciklama":"MACRO","odemeYontemi":"1772810290769.6548"},{"id":1772916850413.647,"tip":"gider","miktar":1676.16,"tarih":"2026-02-21","kategori":"market","aciklama":"METRO","odemeYontemi":"1772810290769.6548"},{"id":1772916835258.2222,"tip":"gider","miktar":2200,"tarih":"2026-02-21","kategori":"yemek","aciklama":"NADAS","odemeYontemi":"1772810290769.6548"},{"id":1772916821392.0322,"tip":"gider","miktar":761.98,"tarih":"2026-02-22","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772916804929.9988,"tip":"gider","miktar":259.5,"tarih":"2026-02-23","kategori":"ev","aciklama":"N11","odemeYontemi":"1772810290769.6548"},{"id":1772916791673.8853,"tip":"gider","miktar":400,"tarih":"2026-02-23","kategori":"ev","aciklama":"N11","odemeYontemi":"1772810290769.6548"},{"id":1772916781237.1401,"tip":"gider","miktar":177,"tarih":"2026-02-23","kategori":"fatura","aciklama":"YİĞİT TCELL","odemeYontemi":"1772810290769.6548"},{"id":1772916759527.2874,"tip":"gider","miktar":385.15,"tarih":"2026-02-23","kategori":"ev","aciklama":"AMAZON","odemeYontemi":"1772810290769.6548"},{"id":1772916742326.1006,"tip":"gider","miktar":437.42,"tarih":"2026-02-23","kategori":"ev","aciklama":"N11","odemeYontemi":"1772810290769.6548"},{"id":1772916703695.9922,"tip":"gider","miktar":3027.68,"tarih":"2026-02-23","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772916681332.7668,"tip":"gider","miktar":703.8,"tarih":"2026-02-23","kategori":"fatura","aciklama":"TTNET","odemeYontemi":"1772810290769.6548"},{"id":1772916290520.8843,"tip":"gider","miktar":2274.04,"tarih":"2025-12-25","kategori":"eglence","aciklama":"OYUNCAK","odemeYontemi":"1772810290769.6548"},{"id":1772916257789.1653,"tip":"gider","miktar":980,"tarih":"2026-01-17","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772916244105.2031,"tip":"gider","miktar":60,"tarih":"2026-01-17","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772916235589.4329,"tip":"gider","miktar":107.84,"tarih":"2026-01-16","kategori":"market","aciklama":"EKREMOĞLU","odemeYontemi":"1772810290769.6548"},{"id":1772916219644.2058,"tip":"gider","miktar":525,"tarih":"2026-01-11","kategori":"market","aciklama":"TATLI","odemeYontemi":"1772810290769.6548"},{"id":1772916202785.8528,"tip":"gider","miktar":1000,"tarih":"2026-01-11","kategori":"yemek","aciklama":"KURUYEMİŞ","odemeYontemi":"1772810290769.6548"},{"id":1772916188801.9927,"tip":"gider","miktar":1553.3,"tarih":"2026-01-18","kategori":"yemek","aciklama":"K. YUSUF","odemeYontemi":"1772810290769.6548"},{"id":1772916172755.501,"tip":"gider","miktar":975,"tarih":"2026-01-10","kategori":"yemek","aciklama":"MEZE","odemeYontemi":"1772810290769.6548"},{"id":1772916156919.2683,"tip":"gider","miktar":999.99,"tarih":"2025-12-29","kategori":"giyim","aciklama":"SARAR","odemeYontemi":"1772810290769.6548"},{"id":1772916131599.7341,"tip":"gider","miktar":480,"tarih":"2026-01-17","kategori":"market","aciklama":"SU","odemeYontemi":"1772810290769.6548"},{"id":1772916120888.2085,"tip":"gider","miktar":155,"tarih":"2026-01-22","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772916111137.5842,"tip":"gider","miktar":780.01,"tarih":"2026-01-11","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772916098065.1016,"tip":"gider","miktar":1211.19,"tarih":"2026-01-04","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772916085640.002,"tip":"gider","miktar":563.97,"tarih":"2026-01-13","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772916066138.2617,"tip":"gider","miktar":1921.43,"tarih":"2025-12-28","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772916051724.744,"tip":"gider","miktar":527.11,"tarih":"2025-12-27","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772915996654.54,"tip":"gider","miktar":316.67,"tarih":"2026-01-18","kategori":"market","aciklama":"MİGROS","odemeYontemi":"1772810290769.6548"},{"id":1772915978675.7288,"tip":"gider","miktar":2466.94,"tarih":"2026-01-17","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772915966847.7554,"tip":"gider","miktar":299.95,"tarih":"2026-01-14","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772915944326.5098,"tip":"gider","miktar":1006.8,"tarih":"2026-01-10","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772915911167.3806,"tip":"gider","miktar":508.89,"tarih":"2025-12-31","kategori":"ev","aciklama":"KOÇTAŞ","odemeYontemi":"1772810290769.6548"},{"id":1772915891815.5664,"tip":"gider","miktar":2102.11,"tarih":"2026-01-04","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772915874206.0447,"tip":"gider","miktar":561.93,"tarih":"2025-12-31","kategori":"market","aciklama":"KİPA","odemeYontemi":"1772810290769.6548"},{"id":1772915836848.9426,"tip":"gider","miktar":8530.67,"tarih":"2026-01-06","kategori":"kredi_od","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772915797035.8372,"tip":"gider","miktar":3419.8,"tarih":"2026-01-20","kategori":"fatura","aciklama":"SU","odemeYontemi":"1772810290769.6548"},{"id":1772915733115.3215,"tip":"gider","miktar":1048.5,"tarih":"2026-01-02","kategori":"fatura","aciklama":"AİDAT","odemeYontemi":"1772810290769.6548"},{"id":1772915713399.451,"tip":"gider","miktar":345,"tarih":"2026-01-01","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772915684489.0068,"tip":"gider","miktar":507.5,"tarih":"2025-12-28","kategori":"saglik","aciklama":"İLAÇ","odemeYontemi":"1772810290769.6548"},{"id":1772915631444.4885,"tip":"gider","miktar":274,"tarih":"2026-01-14","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772915618945.0298,"tip":"gider","miktar":52,"tarih":"2026-01-11","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772915609345.681,"tip":"gider","miktar":406.24,"tarih":"2026-01-11","kategori":"market","aciklama":"FİLE","odemeYontemi":"1772810290769.6548"},{"id":1772915590604.9749,"tip":"gider","miktar":504,"tarih":"2025-12-29","kategori":"saglik","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772915576500.96,"tip":"gider","miktar":125,"tarih":"2026-01-21","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772915561801.7617,"tip":"gider","miktar":440,"tarih":"2026-01-02","kategori":"market","aciklama":"SU","odemeYontemi":"1772810290769.6548"},{"id":1772915542144.701,"tip":"gider","miktar":380.6,"tarih":"2025-12-24","kategori":"ev","aciklama":"PERDE","odemeYontemi":"1772810290769.6548"},{"id":1772915483069.037,"tip":"gider","miktar":332.92,"tarih":"2026-01-18","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772915467444.0405,"tip":"gider","miktar":188.52,"tarih":"2026-01-12","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772915450220.7312,"tip":"gider","miktar":37.6,"tarih":"2026-01-10","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772915439198.779,"tip":"gider","miktar":49.9,"tarih":"2026-01-05","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772915368449.771,"tip":"gider","miktar":1202.2,"tarih":"2026-01-10","kategori":"giyim","aciklama":"BEYMEN","odemeYontemi":"1772810290769.6548"},{"id":1772915177873.6536,"tip":"gider","miktar":6637.32,"tarih":"2025-12-27","kategori":"ev","aciklama":"DOĞTAŞ","odemeYontemi":"1772810290769.6548"},{"id":1772914726854.4407,"tip":"gider","miktar":79,"tarih":"2025-12-28","kategori":"market","aciklama":"ŞOK","odemeYontemi":"1772810290769.6548"},{"id":1772914634318.0308,"tip":"gider","miktar":711.79,"tarih":"2025-12-31","kategori":"saglik","aciklama":"KREDİ SİGORTASI","odemeYontemi":"1772810290769.6548"},{"id":1772914377928.9849,"tip":"gider","miktar":985,"tarih":"2025-12-30","kategori":"yemek","aciklama":"TIKLAGELSİN","odemeYontemi":"1772810290769.6548"},{"id":1772914336396.1677,"tip":"gider","miktar":2868.66,"tarih":"2026-01-01","kategori":"ev","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772914191384.9844,"tip":"gider","miktar":379.98,"tarih":"2025-12-29","kategori":"giyim","aciklama":"HM","odemeYontemi":"1772810290769.6548"},{"id":1772914154268.527,"tip":"gider","miktar":2100.98,"tarih":"2026-01-10","kategori":"giyim","aciklama":"LCW","odemeYontemi":"1772810290769.6548"},{"id":1772898304409.3142,"tip":"gider","miktar":754.81,"tarih":"2026-03-07","kategori":"market","aciklama":"BİM","odemeYontemi":"1772810290769.6548"},{"id":1772877881553.2153,"tip":"gider","miktar":69.9,"tarih":"2026-03-07","kategori":"giyim","aciklama":"HB","odemeYontemi":"1772810290769.6548"},{"id":1772833946295.45,"tip":"gider","miktar":1506,"tarih":"2026-03-11","kategori":"saglik","aciklama":"Sigorta","odemeYontemi":"1772810290769.6548"},{"id":1772825575639.836,"tip":"gider","miktar":597.83,"tarih":"2026-03-05","kategori":"market","aciklama":"File","odemeYontemi":"1772810290769.6548"},{"id":1772825555092.4983,"tip":"gider","miktar":25,"tarih":"2026-03-05","kategori":"market","aciklama":"Anafartalar","odemeYontemi":"1772810290769.6548"},{"id":1772825526937.2686,"tip":"gider","miktar":175,"tarih":"2026-03-03","kategori":"market","aciklama":"Mantı","odemeYontemi":"1772810290769.6548"},{"id":1772825513768.236,"tip":"gider","miktar":504,"tarih":"2026-03-03","kategori":"market","aciklama":"A101","odemeYontemi":"1772810290769.6548"},{"id":1772825493664.721,"tip":"gider","miktar":276.9,"tarih":"2026-03-03","kategori":"fatura","aciklama":"Çisem Tel","odemeYontemi":"1772810290769.6548"},{"id":1772825331735.689,"tip":"gider","miktar":867.41,"tarih":"2026-03-03","kategori":"market","aciklama":"Getir","odemeYontemi":"1772810290769.6548"},{"id":1772825308132.6099,"tip":"gider","miktar":194.81,"tarih":"2026-03-02","kategori":"saglik","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772825290126.3752,"tip":"gider","miktar":68,"tarih":"2026-03-02","kategori":"market","aciklama":"Anafartalar","odemeYontemi":"1772810290769.6548"},{"id":1772825225261.6602,"tip":"gider","miktar":2223.82,"tarih":"2026-03-01","kategori":"ev","aciklama":"Amazon","odemeYontemi":"1772810290769.6548"},{"id":1772824958757.8022,"tip":"gider","miktar":1205.78,"tarih":"2026-02-28","kategori":"fatura","aciklama":"Aidat","odemeYontemi":"1772810290769.6548"},{"id":1772824927891.9412,"tip":"gider","miktar":850,"tarih":"2026-02-28","kategori":"yemek","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772824918460.653,"tip":"gider","miktar":60,"tarih":"2026-02-28","kategori":"market","aciklama":"","odemeYontemi":"1772810290769.6548"},{"id":1772824900858.07,"tip":"gider","miktar":2491.29,"tarih":"2026-02-26","kategori":"fatura","aciklama":"Doğalgaz","odemeYontemi":"1772810290769.6548"},{"id":1772824796424.6382,"tip":"gider","miktar":346.2,"tarih":"2026-02-24","kategori":"market","aciklama":"File","odemeYontemi":"1772810290769.6548"}],"hedefler":{},"katHedefler":{"2026-03":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-01":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-02":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-04":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-05":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-06":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-07":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-08":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-09":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-10":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-11":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000},"2026-12":{"market":12000,"kira":28000,"giyim":5000,"ev":4000,"yemek":5000,"egitim":15000,"saglik":5000,"tatil":10000,"araba":5000,"fatura":5000,"__tasarruf":25000,"yatirim":5000,"kredi_od":25000,"eglence":2000}},"taksitler":[{"id":1772919355349.621,"ad":"VERGİ","toplam":4506,"sayi":3,"kategori":"araba","bas":"2026-02","kartId":"1772810290769.6548"},{"id":1772918214162.5735,"ad":"BEYMEN","toplam":7703.7,"sayi":6,"kategori":"giyim","bas":"2026-03","kartId":"1772810290769.6548"},{"id":1772917311889.63,"ad":"LEFTIES","toplam":3215,"sayi":3,"kategori":"giyim","bas":"2026-02","kartId":"1772810290769.6548"},{"id":1772916026904.0886,"ad":"PAULMARK","toplam":2571.8,"sayi":3,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772915665104.8625,"ad":"SİGORTA","toplam":4518,"sayi":3,"kategori":"saglik","bas":"2026-01","kartId":"1772810290769.6548"},{"id":1772915421728.6343,"ad":"HB","toplam":1628.53,"sayi":3,"kategori":"ev","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772915389354.147,"ad":"IKEA","toplam":2192.07,"sayi":3,"kategori":"giyim","bas":"2026-01","kartId":"1772810290769.6548"},{"id":1772915336018.3477,"ad":"BEYMEN","toplam":3114.3,"sayi":6,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772915290538.5737,"ad":"BEYMEN","toplam":32033.4,"sayi":4,"kategori":"giyim","bas":"2025-10","kartId":"1772810290769.6548"},{"id":1772915246430.9504,"ad":"BEYMEN","toplam":5315.8,"sayi":6,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772915127704.755,"ad":"MUDO","toplam":1242.08,"sayi":2,"kategori":"ev","bas":"2025-12","kartId":"1772810290769.6548"},{"id":1772915092654.9568,"ad":"N11","toplam":4048,"sayi":3,"kategori":"eglence","bas":"2026-01","kartId":"1772810290769.6548"},{"id":1772915031955.3728,"ad":"BOYNER","toplam":3399.99,"sayi":6,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772914939721.422,"ad":"TRENDYOL","toplam":499.99,"sayi":3,"kategori":"giyim","bas":"2025-12","kartId":"1772810290769.6548"},{"id":1772914855676.8198,"ad":"TRENDYOL","toplam":979.95,"sayi":3,"kategori":"giyim","bas":"2025-12","kartId":"1772810290769.6548"},{"id":1772914795537.5947,"ad":"HM","toplam":1948.99,"sayi":3,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772914764433.1284,"ad":"CEZA","toplam":1625.25,"sayi":3,"kategori":"araba","bas":"2026-01","kartId":"1772810290769.6548"},{"id":1772914703507.258,"ad":"KREDİ SİGORTASI","toplam":3805,"sayi":9,"kategori":"saglik","bas":"2025-08","kartId":"1772810290769.6548"},{"id":1772914569251.897,"ad":"VATAN","toplam":10790,"sayi":3,"kategori":"ev","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772914528003.9893,"ad":"ADİDAS","toplam":2124.15,"sayi":3,"kategori":"giyim","bas":"2025-11","kartId":"1772810290769.6548"},{"id":1772914456048.8794,"ad":"SİGORTA","toplam":8098.01,"sayi":5,"kategori":"araba","bas":"2025-12","kartId":"1772810290769.6548"},{"id":1772914432106.164,"ad":"KASKO","toplam":10418.57,"sayi":6,"kategori":"araba","bas":"2025-12","kartId":"1772810290769.6548"},{"id":1772914312349.4602,"ad":"YATAŞ","toplam":6914.33,"sayi":7,"kategori":"ev","bas":"2026-01","kartId":"1772810290769.6548"},{"id":1772914270764.0344,"ad":"BOYNER","toplam":3049,"sayi":6,"kategori":"giyim","bas":"2025-12","kartId":"1772810290769.6548"}],"krediler":[{"id":1773555471871.1196,"ad":"AKBANK 2,49","anaPara":0,"taksit":10188,"ay":12,"bas":"2026-03"},{"id":1772980026122.16,"ad":"TAKSİTLİ AVANS","anaPara":0,"taksit":15902,"ay":3,"bas":"2026-03"},{"id":1772919595735.979,"ad":"ING","anaPara":0,"taksit":8333,"ay":3,"bas":"2026-03"},{"id":1772815338112.0957,"ad":"Yiğit Garanti 2,99","anaPara":0,"taksit":12647.77,"ay":24,"bas":"2026-03"}],"kartlar":[{"id":1772810290769.6548,"ad":"Garanti Bonus","renk":"#22d3a0","kesimGunu":23,"kesimGunleri":{"2026-01":22,"2026-02":24,"2026-03":23}},{"id":1772815370595.1975,"ad":"ING","renk":"#f25a5a","kesimGunu":25,"kesimGunleri":{"2026-03":25}}],"sabitler":[{"id":1772810462674.2944,"ad":"Kreş","miktar":15000,"kategori":"egitim","odemeYontemi":"1772815370595.1975","gun":25,"baslangic":"2025-12","bitis":null},{"id":1772810414082.2114,"ad":"BES","miktar":5000,"kategori":"yatirim","odemeYontemi":"1772810290769.6548","gun":25,"baslangic":"2026-01","bitis":null},{"id":1772810375226.4077,"ad":"Kira","miktar":28000,"kategori":"kira","odemeYontemi":"nakit","gun":1,"baslangic":"2026-01","bitis":null}],"sabitOdeme":{"2026-03":{"1772810375226.4077":true,"1772810414082.2114":true,"1772810462674.2944":true},"2026-02":{"1772810462674.2944":true,"1772810414082.2114":true,"1772810375226.4077":true},"2026-01":{"1772810462674.2944":true,"1772810375226.4077":true,"1772810414082.2114":true}}};
+
+const KAT={gelir:[{id:"maas",label:"Maaş",emoji:"💼"},{id:"serbest",label:"Serbest Çalışma",emoji:"💻"},{id:"kira_g",label:"Kira Geliri",emoji:"🏠"},{id:"yatirim_g",label:"Yatırım Geliri",emoji:"📈"},{id:"dig_g",label:"Diğer Gelir",emoji:"✨"}],gider:[{id:"kira",label:"Kira",emoji:"🏘️"},{id:"market",label:"Market",emoji:"🛒"},{id:"giyim",label:"Giyim",emoji:"👗"},{id:"ev",label:"Ev",emoji:"🏠"},{id:"yemek",label:"Yemek",emoji:"🍽️"},{id:"egitim",label:"Eğitim",emoji:"🎓"},{id:"eglence",label:"Eğlence",emoji:"🎬"},{id:"saglik",label:"Sağlık",emoji:"💊"},{id:"tatil",label:"Tatil",emoji:"✈️"},{id:"araba",label:"Araba",emoji:"🚗"},{id:"fatura",label:"Faturalar",emoji:"📄"},{id:"kredi_od",label:"Kredi",emoji:"🏦"},{id:"yatirim",label:"Yatırım",emoji:"📊"},{id:"diger",label:"Diğer",emoji:"📦"}]};
+const CAT_COLORS={kira:"#a78bfa",market:"#6366f1",giyim:"#f25a5a",ev:"#34d399",yemek:"#22d3a0",egitim:"#38bdf8",eglence:"#f59e0b",saglik:"#f97316",tatil:"#06b6d4",araba:"#84cc16",fatura:"#e879f9",kredi_od:"#60a5fa",yatirim:"#facc15",diger:"#818cf8"};
+const AYLAR=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+
+let S = JSON.parse(JSON.stringify(INIT_DATA));
+let curTip="gider", curKat="market", curOdeme="nakit", taksitliMi=false, filtre="hepsi";
+
+function fp(n){return"₺"+Math.abs(Number(n||0)).toLocaleString("tr-TR",{minimumFractionDigits:0,maximumFractionDigits:0});}
+function getAy(ds){const d=new Date(ds);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
+function getAyLabel(s){const[y,m]=s.split("-");return`${AYLAR[+m-1]} ${y}`;}
+function addMonths(s,n){const d=new Date(s+"-01");d.setMonth(d.getMonth()+n);return getAy(d.toISOString());}
+function uid(){return Date.now()+Math.random();}
+function kartAyi(tarih,kg){const d=new Date(tarih);if(d.getDate()>=kg){const nx=new Date(d.getFullYear(),d.getMonth()+1,1);return`${nx.getFullYear()}-${String(nx.getMonth()+1).padStart(2,"0")}`;}return getAy(tarih);}
+function islemAyi(i,kartlar){if(i.odemeYontemi&&i.odemeYontemi!=="nakit"){const k=(kartlar||[]).find(c=>String(c.id)===String(i.odemeYontemi));if(k){const kg=k.kesimGunleri?.[getAy(i.tarih)]??k.kesimGunu??null;if(kg)return kartAyi(i.tarih,kg);}}return getAy(i.tarih);}
+function ayTak(taks,ay){return(taks||[]).reduce((s,t)=>{const b=addMonths(t.bas,t.sayi-1);return(ay>=t.bas&&ay<=b)?s+t.toplam/t.sayi:s;},0);}
+function ayKrd(krds,ay){return(krds||[]).reduce((s,k)=>{const b=addMonths(k.bas,k.ay-1);return(ay>=k.bas&&ay<=b)?s+k.taksit:s;},0);}
+function tIl(t,m){let n=0,ay=t.bas;while(ay<=m&&n<t.sayi){n++;ay=addMonths(ay,1);}return Math.min(n,t.sayi);}
+function kIl(k,m){let n=0,ay=k.bas;while(ay<=m&&n<k.ay){n++;ay=addMonths(ay,1);}return Math.min(n,k.ay);}
+
+// Month list
+function buildMonths(){
+  const set=new Set();
+  const today=getAy(new Date().toISOString());
+  set.add(today);
+  (S.islemler||[]).forEach(i=>set.add(getAy(i.tarih)));
+  (S.taksitler||[]).forEach(t=>{let ay=t.bas;for(let i=0;i<t.sayi;i++){set.add(ay);ay=addMonths(ay,1);}});
+  (S.krediler||[]).forEach(k=>{let ay=k.bas;for(let i=0;i<k.ay;i++){set.add(ay);ay=addMonths(ay,1);}});
+  return Array.from(set).sort().reverse();
+}
+
+let months=buildMonths();
+let curMonth=getAy(new Date().toISOString());
+
+function prevMonth(){const i=months.indexOf(curMonth);if(i<months.length-1){curMonth=months[i+1];render();}}
+function nextMonth(){const i=months.indexOf(curMonth);if(i>0){curMonth=months[i-1];render();}}
+
+// Tab navigation
+function goTab(name,el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+  el.classList.add("on");
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("on"));
+  document.getElementById("pg-"+name).classList.add("on");
+  document.getElementById("content").scrollTop=0;
+  if(name==="ozet")renderOzet();
+  if(name==="ayarlar")renderAyarlar();
+  if(name==="ekle"){renderKatChips();renderOdemeChips();}
+}
+
+// Header render
+function renderHeader(){
+  const kartlar=S.kartlar||[];
+  const ayIs=(S.islemler||[]).filter(i=>islemAyi(i,kartlar)===curMonth);
+  const gelir=ayIs.filter(i=>i.tip==="gelir").reduce((a,i)=>a+i.miktar,0);
+  const normG=ayIs.filter(i=>i.tip==="gider").reduce((a,i)=>a+i.miktar,0);
+  const takG=ayTak(S.taksitler,curMonth);
+  const krdG=ayKrd(S.krediler,curMonth);
+  const sabitG=(S.sabitler||[]).filter(s=>curMonth>=s.baslangic&&(!s.bitis||curMonth<=s.bitis)).reduce((a,s)=>a+s.miktar,0);
+  const topG=normG+takG+krdG+sabitG;
+  const bak=gelir-topG;
+  document.getElementById("hg").textContent=fp(gelir);
+  document.getElementById("hd").textContent=fp(topG);
+  const hb=document.getElementById("hb");
+  hb.textContent=fp(bak);
+  hb.style.color=bak>=0?"#22d3a0":"#f25a5a";
+  document.getElementById("mn-label").textContent=getAyLabel(curMonth);
+  const idx=months.indexOf(curMonth);
+  document.getElementById("mn-prev").disabled=idx>=months.length-1;
+  document.getElementById("mn-next").disabled=idx<=0;
+}
+
+// İşlemler render
+function setFiltr(f,el){
+  filtre=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+  renderTxList();
+}
+
+function renderTxList(){
+  const kartlar=S.kartlar||[];
+  const ayIs=(S.islemler||[]).filter(i=>islemAyi(i,kartlar)===curMonth).sort((a,b)=>b.tarih.localeCompare(a.tarih));
+  const show=filtre==="hepsi"?ayIs:ayIs.filter(i=>i.tip===filtre);
+  document.getElementById("fcount").textContent=show.length+" kayıt";
+  if(!show.length){
+    document.getElementById("tx-list").innerHTML='<div class="empty"><div class="empty-ico">🧾</div><div class="empty-txt">Bu ay kayıt bulunamadı.</div></div>';
+    return;
+  }
+  document.getElementById("tx-list").innerHTML=show.map(i=>{
+    const ka=i.tip==="gelir"?KAT.gelir:KAT.gider;
+    const k=ka.find(x=>x.id===i.kategori)||{emoji:"📦",label:i.kategori};
+    const kart=kartlar.find(c=>String(c.id)===String(i.odemeYontemi));
+    const bg=i.tip==="gelir"?"rgba(34,211,160,0.12)":"rgba(242,90,90,0.1)";
+    const pill=kart?`<span class="kpill">💳 ${kart.ad}</span>`:`<span class="npill">💵 Nakit</span>`;
+    const renk=i.tip==="gelir"?"#22d3a0":"#f25a5a";
+    const dt=new Date(i.tarih+"T00:00").toLocaleDateString("tr-TR",{day:"numeric",month:"short"});
+    return`<div class="tx"><div class="tx-ico" style="background:${bg}">${k.emoji}</div><div class="tx-info"><div class="tx-top"><span class="tx-name">${i.aciklama||k.label}</span>${pill}</div><div class="tx-sub">${k.label} · ${dt}</div></div><div class="tx-amt" style="color:${renk}">${i.tip==="gelir"?"+":"-"}${fp(i.miktar)}</div></div>`;
+  }).join("");
+}
+
+// Ekle form
+function renderKatChips(){
+  const list=KAT[curTip]||KAT.gider;
+  document.getElementById("f-kat-list").innerHTML=list.map(k=>
+    `<div class="kchip${curKat===k.id?" on":""}" onclick="selKat('${k.id}')"><span class="kchip-e">${k.emoji}</span><span class="kchip-l">${k.label}</span></div>`
+  ).join("");
+}
+function selKat(id){curKat=id;renderKatChips();}
+
+function renderOdemeChips(){
+  const kartlar=S.kartlar||[];
+  const opts=[{id:"nakit",label:"💵 Nakit"},...kartlar.map(k=>({id:String(k.id),label:`💳 ${k.ad}`}))];
+  document.getElementById("f-odeme-list").innerHTML=opts.map(o=>
+    `<div class="ochip${curOdeme===o.id?" on":""}" onclick="selOdeme('${o.id}')">${o.label}</div>`
+  ).join("");
+}
+function selOdeme(id){curOdeme=id;renderOdemeChips();}
+
+function setTip(t){
+  curTip=t;curKat=t==="gelir"?"maas":"market";taksitliMi=false;
+  document.getElementById("btn-g").className="sbtn g"+(t==="gelir"?" on":"");
+  document.getElementById("btn-d").className="sbtn d"+(t==="gider"?" on":"");
+  document.getElementById("tak-toggle-wrap").style.display=t==="gider"?"block":"none";
+  document.getElementById("tak-box").style.display="none";
+  document.getElementById("chk-sq").classList.remove("on");
+  document.getElementById("chk-lbl").classList.remove("on");
+  const ab=document.getElementById("add-btn");
+  ab.style.background=t==="gelir"?"#22d3a0":"#f25a5a";
+  ab.style.color=t==="gelir"?"#000":"#fff";
+  ab.textContent="+ Ekle";
+  renderKatChips();renderOdemeChips();
+}
+
+function toggleTak(){
+  taksitliMi=!taksitliMi;
+  document.getElementById("chk-sq").classList.toggle("on",taksitliMi);
+  document.getElementById("chk-lbl").classList.toggle("on",taksitliMi);
+  document.getElementById("tak-box").style.display=taksitliMi?"block":"none";
+  const ab=document.getElementById("add-btn");
+  ab.style.background=taksitliMi?"#a78bfa":"#f25a5a";
+  ab.style.color="#fff";
+  updateTakPreview();
+}
+
+function updateTakPreview(){
+  if(!taksitliMi)return;
+  const m=parseFloat(document.getElementById("f-miktar").value)||0;
+  const s=parseInt(document.getElementById("f-taksay").value)||12;
+  document.getElementById("tak-preview").textContent=`${s} × ${fp(m/s)}/ay`;
+  document.getElementById("add-btn").textContent=`🔄 Taksitli Ekle (${s}×${fp(m/s)}/ay)`;
+}
+
+function ekle(){
+  const m=parseFloat(document.getElementById("f-miktar").value);
+  const tarih=document.getElementById("f-tarih").value;
+  const acik=document.getElementById("f-acik").value.trim();
+  if(!m||m<=0){showToast("Geçerli bir tutar girin");return;}
+  if(!tarih){showToast("Tarih seçin");return;}
+  if(curTip==="gider"&&taksitliMi){
+    const sayi=parseInt(document.getElementById("f-taksay").value)||12;
+    const katObj=KAT.gider.find(k=>k.id===curKat);
+    S.taksitler=[{id:uid(),ad:acik||(katObj?.label||curKat),toplam:m,sayi,kategori:curKat,bas:getAy(tarih),kartId:curOdeme},...(S.taksitler||[])];
+    showToast(`Taksit eklendi: ${sayi}×${fp(m/sayi)}/ay`);
+  } else {
+    S.islemler=[{id:uid(),tip:curTip,miktar:m,tarih,kategori:curKat,aciklama:acik,odemeYontemi:curOdeme},...S.islemler];
+    showToast("İşlem eklendi");
+  }
+  saveLocal();
+  if(window.process && window.process.versions && window.process.versions.electron) {
+    try {
+      new Audio('https://www.soundjay.com/misc/sounds/cash-register-purchase-1.mp3').play();
+    } catch(e){}
+  }
+  document.getElementById("f-miktar").value="";
+  document.getElementById("f-acik").value="";
+  taksitliMi=false;
+  document.getElementById("chk-sq").classList.remove("on");
+  document.getElementById("chk-lbl").classList.remove("on");
+  document.getElementById("tak-box").style.display="none";
+  const ab=document.getElementById("add-btn");
+  ab.style.background=curTip==="gelir"?"#22d3a0":"#f25a5a";
+  ab.style.color=curTip==="gelir"?"#000":"#fff";
+  ab.textContent="+ Ekle";
+  months=buildMonths();
+  render();
+  // Switch to islemler tab
+  document.querySelectorAll(".tab").forEach((t,i)=>{t.classList.toggle("on",i===0);});
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("on"));
+  document.getElementById("pg-islemler").classList.add("on");
+}
+
+// Özet
+function renderOzet(){
+  const kartlar=S.kartlar||[];
+  const ayIs=(S.islemler||[]).filter(i=>islemAyi(i,kartlar)===curMonth);
+  const gelir=ayIs.filter(i=>i.tip==="gelir").reduce((a,i)=>a+i.miktar,0);
+  const normG=ayIs.filter(i=>i.tip==="gider").reduce((a,i)=>a+i.miktar,0);
+  const takG=ayTak(S.taksitler,curMonth);
+  const krdG=ayKrd(S.krediler,curMonth);
+  const sabitG=(S.sabitler||[]).filter(s=>curMonth>=s.baslangic&&(!s.bitis||curMonth<=s.bitis)).reduce((a,s)=>a+s.miktar,0);
+  const topG=normG+takG+krdG+sabitG;
+  const bak=gelir-topG;
+  const aktifT=(S.taksitler||[]).filter(t=>{const b=addMonths(t.bas,t.sayi-1);return curMonth>=t.bas&&curMonth<=b;});
+  const aktifK=(S.krediler||[]).filter(k=>{const b=addMonths(k.bas,k.ay-1);return curMonth>=k.bas&&curMonth<=b;});
+  const aktifS=(S.sabitler||[]).filter(s=>curMonth>=s.baslangic&&(!s.bitis||curMonth<=s.bitis));
+
+  document.getElementById("oz-grid").innerHTML=[
+    {l:"Toplam Gelir",v:fp(gelir),c:"#22d3a0",s:`${ayIs.filter(i=>i.tip==="gelir").length} işlem`},
+    {l:"Normal Gider",v:fp(normG),c:"#f25a5a",s:`${ayIs.filter(i=>i.tip==="gider").length} işlem`},
+    {l:"Sabit Gider",v:fp(sabitG),c:"#34d399",s:`${aktifS.length} kalem`},
+    {l:"Taksitler",v:fp(takG),c:"#a78bfa",s:`${aktifT.length} aktif`},
+    {l:"Krediler",v:fp(krdG),c:"#60a5fa",s:`${aktifK.length} aktif`},
+    {l:"Net Bakiye",v:fp(bak),c:bak>=0?"#22d3a0":"#f25a5a",s:bak>=0?"✓ Pozitif":"⚠ Negatif"},
+  ].map(x=>`<div class="oz-card"><div class="oz-lbl">${x.l}</div><div class="oz-val" style="color:${x.c}">${x.v}</div><div class="oz-sub">${x.s}</div></div>`).join("");
+
+  // Kategori dağılımı
+  function katTop(id){
+    const isl=ayIs.filter(i=>i.tip==="gider"&&i.kategori===id).reduce((a,i)=>a+i.miktar,0);
+    const sbt=(S.sabitler||[]).filter(s=>s.kategori===id&&curMonth>=s.baslangic&&(!s.bitis||curMonth<=s.bitis)).reduce((a,s)=>a+s.miktar,0);
+    const tak=(S.taksitler||[]).filter(t=>t.kategori===id).reduce((a,t)=>{const b=addMonths(t.bas,t.sayi-1);return(curMonth>=t.bas&&curMonth<=b)?a+t.toplam/t.sayi:a;},0);
+    const krd=id==="kredi_od"?krdG:0;
+    return isl+sbt+tak+krd;
+  }
+  const cats=KAT.gider.map(k=>({...k,total:katTop(k.id)})).filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  if(cats.length){
+    document.getElementById("oz-cats-card").style.display="block";
+    document.getElementById("oz-cats").innerHTML=cats.map(c=>{
+      const pct=topG>0?Math.round(c.total/topG*100):0;
+      return`<div class="cat-row"><span class="cat-e">${c.emoji}</span><span class="cat-n">${c.label}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${CAT_COLORS[c.id]||"#818cf8"}"></div></div><span class="cat-amt">${fp(c.total)}</span></div>`;
+    }).join("");
+  } else document.getElementById("oz-cats-card").style.display="none";
+
+  // Sabit
+  if(aktifS.length){
+    document.getElementById("oz-sabit-card").style.display="block";
+    document.getElementById("oz-sabit").innerHTML=aktifS.map(s=>{
+      const odendi=!!(S.sabitOdeme?.[curMonth]?.[s.id]);
+      const kart=kartlar.find(k=>String(k.id)===String(s.odemeYontemi));
+      return`<div class="pay-row"><div><div class="pay-name">🔁 ${s.ad}</div><div class="pay-sub">${kart?"💳 "+kart.ad:"💵 Nakit"} · ${odendi?"✓ Ödendi":"⏳ Bekliyor"}</div></div><div class="pay-amt" style="color:#34d399">${fp(s.miktar)}</div></div>`;
+    }).join("");
+  } else document.getElementById("oz-sabit-card").style.display="none";
+
+  // Taksitler
+  if(aktifT.length){
+    document.getElementById("oz-tak-card").style.display="block";
+    document.getElementById("oz-tak").innerHTML=aktifT.map(t=>{
+      const il=tIl(t,curMonth);const pct=Math.round(il/t.sayi*100);
+      const kart=kartlar.find(k=>String(k.id)===String(t.kartId));
+      return`<div class="pay-row" style="flex-direction:column;align-items:stretch;"><div style="display:flex;justify-content:space-between;"><span class="pay-name">🔄 ${t.ad}</span><span class="pay-amt" style="color:#a78bfa">${fp(t.toplam/t.sayi)}/ay</span></div><div class="pay-sub">${il}/${t.sayi}. taksit · ${kart?kart.ad:"Nakit"} · Toplam ${fp(t.toplam)}</div><div class="prog-row"><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#a78bfa"></div></div><span class="prog-pct">${pct}%</span></div></div>`;
+    }).join("");
+  } else document.getElementById("oz-tak-card").style.display="none";
+
+  // Krediler
+  if(aktifK.length){
+    document.getElementById("oz-krd-card").style.display="block";
+    document.getElementById("oz-krd").innerHTML=aktifK.map(k=>{
+      const il=kIl(k,curMonth);const pct=Math.round(il/k.ay*100);
+      return`<div class="pay-row" style="flex-direction:column;align-items:stretch;"><div style="display:flex;justify-content:space-between;"><span class="pay-name">🏦 ${k.ad}</span><span class="pay-amt" style="color:#60a5fa">${fp(k.taksit)}/ay</span></div><div class="pay-sub">${il}/${k.ay}. ay · Kalan ${fp(k.taksit*(k.ay-il))}</div><div class="prog-row"><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#60a5fa"></div></div><span class="prog-pct">${pct}%</span></div></div>`;
+    }).join("");
+  } else document.getElementById("oz-krd-card").style.display="none";
+}
+
+// Ayarlar
+function renderAyarlar(){
+  const saved=localStorage.getItem("akis_od_url")||"";
+  if(saved)document.getElementById("od-url").value=saved;
+  const kartlar=S.kartlar||[];
+  document.getElementById("veri-stats").innerHTML=[
+    {l:"İşlemler",v:(S.islemler||[]).length},
+    {l:"Taksitler",v:(S.taksitler||[]).length},
+    {l:"Krediler",v:(S.krediler||[]).length},
+    {l:"Sabitler",v:(S.sabitler||[]).length},
+  ].map(r=>`<div class="stat-row"><span class="stat-lbl">${r.l}</span><span class="stat-val">${r.v} kayıt</span></div>`).join("")+
+  kartlar.map(k=>`<div class="kart-row"><div class="kart-dot" style="background:${k.renk||"#6366f1"}"></div><span style="font-size:12px;color:#e8e8f0;flex:1;">💳 ${k.ad}</span><span style="font-size:10px;color:#5a5a72;">Kesim: ${k.kesimGunu}. gün</span></div>`).join("");
+}
+
+async function syncBulut(){
+  const url="https://gist.githubusercontent.com/yigitakis/bd8e8cd8b911efae8afd83ca19c804f3/raw/";
+  showToast("Bağlanıyor…");
+  try{
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
+    let r;
+    try {
+      r=await fetch(url,{redirect:"follow", signal: controller.signal});
+    } catch(fetchErr) {
+      if(fetchErr.name === 'AbortError') throw new Error("Bağlantı zaman aşımına uğradı. Sunucu yanıt vermiyor.");
+      throw fetchErr;
+    }
+    clearTimeout(timeoutId);
+    
+    if(!r.ok)throw new Error("HTTP "+r.status+" (Erişim engellendi)");
+    const text=await r.text();
+    if(!text||text.trim().startsWith("<"))throw new Error("Geçerli bir JSON dosyası yerine sayfa döndürüldü.");
+    const d=JSON.parse(text);
+    if(!d||(!d.islemler&&!d.kartlar))throw new Error("Geçersiz veri formatı");
+    S={...S,...d};
+    months=buildMonths();
+    saveLocal();render();renderAyarlar();
+    showToast(`✓ ${d.islemler?.length||0} işlem yüklendi`);
+  }catch(e){showToast("Hata: "+e.message);}
+}
+
+function syncOneDrive() { syncBulut(); } // Legacy support
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="akis-data.json";
+  a.click();
+}
+
+// GitHub Gist write-back
+const GIST_ID="bd8e8cd8b911efae8afd83ca19c804f3";
+const GIST_TOKEN="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";
+let _gistTimer=null;
+function syncToGist(){
+  if(_gistTimer)clearTimeout(_gistTimer);
+  _gistTimer=setTimeout(async()=>{
+    try{
+      await fetch("https://api.github.com/gists/"+GIST_ID,{
+        method:"PATCH",
+        headers:{"Authorization":"token "+GIST_TOKEN,"Content-Type":"application/json","User-Agent":"AileButce"},
+        body:JSON.stringify({files:{"gistfile1.txt":{content:JSON.stringify(S,null,2)}}})
+      });
+    }catch(e){console.error("Gist yazma hatası:",e);}
+  },2000);
+}
+
+// LocalStorage
+
+  let fsNode, pathNode, osNode, oneDrivePath;
+  try {
+    if (typeof require !== 'undefined') {
+      fsNode = require('fs');
+      pathNode = require('path');
+      osNode = require('os');
+      const docsPath = pathNode.join(osNode.homedir(), 'Documents', 'AkisBudget');
+      if(!fsNode.existsSync(docsPath)) fsNode.mkdirSync(docsPath, {recursive:true});
+      oneDrivePath = pathNode.join(docsPath, 'akis-data.json');
+    }
+  } catch(e) {}
+
+  function saveLocal(){
+    try{localStorage.setItem("akis_budget_data",JSON.stringify(S));}catch(e){}
+    if(fsNode){
+      try{fsNode.writeFileSync(oneDrivePath, JSON.stringify(S, null, 2), 'utf8');}catch(e){console.error(e);}
+    }
+    syncToGist();
+  }
+
+  function loadLocal(){
+    try{
+      if(fsNode && fsNode.existsSync(oneDrivePath)){
+        const raw = fsNode.readFileSync(oneDrivePath, 'utf8');
+        if(raw){const d=JSON.parse(raw);S={...INIT_DATA,...d};return;}
+      }
+      const raw=localStorage.getItem("akis_budget_data");
+      if(raw){const d=JSON.parse(raw);S={...INIT_DATA,...d};}
+    }catch(e){}
+  }
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3000);
+}
+
+// Notification Handling
+let pendingNotif = null;
+
+window.onNotificationReceived = (title, text) => {
+  console.log("NOTIF RECEIVED:", title, text);
+  
+  // BonusFlas Regex
+  // Örn: "... MİGROS işyerinde 150,00 TL harcama ..."
+  const amtMatch = text.match(/(\d+[,.]\d+)\s*TL/);
+  const merchantMatch = text.match(/([A-ZÇĞİÖŞÜ0-9\.\*\- ]+)\s+işyerinde/i);
+  
+  if(amtMatch) {
+    const amountStr = amtMatch[1].replace(",", ".");
+    const amount = parseFloat(amountStr);
+    const merchant = merchantMatch ? merchantMatch[1].trim() : "Harcama";
+    
+    pendingNotif = {
+      id: uid(),
+      tip: 'gider',
+      miktar: amount,
+      tarih: new Date().toISOString().split('T')[0],
+      kategori: 'diger', // Default category, user can change later
+      odemeYontemi: '1772810290769.6548' // Default to Garanti Bonus, assuming it's the most common
+    };
+    
+    document.getElementById("nm-merchant").textContent = merchant.substring(0,25);
+    document.getElementById("nm-amount").textContent = amtMatch[1] + " TL";
+    document.getElementById("notif-modal").classList.add("show");
+  }
+};
+
+function closeNotifModal() {
+  document.getElementById("notif-modal").classList.remove("show");
+  pendingNotif = null;
+}
+
+function addNotifTransaction() {
+  if(pendingNotif) {
+    S.islemler.unshift(pendingNotif);
+    saveLocal();
+    render();
+    showToast("✓ İşlem eklendi");
+    closeNotifModal();
+  }
+}
+
+async function openNotificationSettings() {
+  if (window.Capacitor && window.Capacitor.Plugins.NotificationSettings) {
+    try {
+      await window.Capacitor.Plugins.NotificationSettings.open();
+    } catch(e) { console.error(e); }
+  } else {
+    showToast("Bu özellik sadece Android'de çalışır.");
+  }
+}
+
+function render(){
+  renderHeader();
+  renderTxList();
+}
+
+// Auto init
+setTimeout(() => {
+  loadLocal();
+  months=buildMonths();
+  curMonth=getAy(new Date().toISOString());
+  render();
+  syncBulut();
+  
+  // Show permission banner if Android
+  if (window.Capacitor && window.Capacitor.getPlatform() === 'android') {
+    document.getElementById("perm-banner").style.display = "flex";
+  }
+}, 800);
+</script>
+</body>
+</html>
+```
